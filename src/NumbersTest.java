@@ -16,6 +16,7 @@ public class NumbersTest {
     private static final Random random = new Random();
     private static final int MAX_VALUE = 1000;
     private static final int MIN_POINT_VALUE = 30;
+    private static final JTextField numberField = new JTextField();
     private static List<Integer> numbers = new ArrayList<>();
     private static Runnable relayout;
     private static int insertedValue;
@@ -57,8 +58,6 @@ public class NumbersTest {
         JLabel label = new JLabel("How many numbers to display?");
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        NumberFormatter formatter = makeFormatter();
-        JFormattedTextField numberField = new JFormattedTextField(formatter);
         numberField.setColumns(20);
         numberField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -71,14 +70,27 @@ public class NumbersTest {
         page1.add(Box.createVerticalStrut(8));
         page1.add(enterButton);
 
-        enterButton.addActionListener(e -> {
-            insertedValue = (int) numberField.getValue();
-            numberField.setValue(null);
-            createCards();
-            cardLayout.show(cards, PAGE_2);
-        });
+        enterButton.addActionListener(NumbersTest::enterButtonHandler);
 
         return page1;
+    }
+
+    private static void enterButtonHandler(ActionEvent e) {
+        String trimmedString = numberField.getText().trim();
+        try {
+            int value = Integer.parseInt(trimmedString);
+            if (value <= 0 || value > MAX_VALUE) {
+                JOptionPane.showMessageDialog(frame, "Invalid number, can't be over " + MAX_VALUE, "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            insertedValue = value;
+            createCards();
+            cardLayout.show(cards, PAGE_2);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(frame, "Invalid number", "Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            numberField.setText("");
+        }
     }
 
     private static JPanel createPage_2() {
@@ -118,16 +130,6 @@ public class NumbersTest {
         sortButton.addActionListener(NumbersTest::sortCards);
         resetButton.addActionListener(NumbersTest::resetHandler);
         return page2;
-    }
-
-    private static NumberFormatter makeFormatter() {
-        NumberFormat nf = NumberFormat.getIntegerInstance();
-        nf.setGroupingUsed(false);
-        NumberFormatter formatter = new NumberFormatter(nf);
-        formatter.setValueClass(Integer.class);
-        formatter.setAllowsInvalid(false);
-        formatter.setMinimum(1);
-        return formatter;
     }
 
     private static void resetHandler(ActionEvent e) {
