@@ -143,9 +143,7 @@ public class NumbersTest {
         NUMBERS.clear();
         isSorted = false;
         SWAP_INDEXES.clear();
-        if (sortingType == SortingTypeEnum.DESCENDING) {
-            sortingType = SortingTypeEnum.ASCENDING;
-        }
+        sortingType = sortingType == SortingTypeEnum.DESCENDING ? SortingTypeEnum.ASCENDING : SortingTypeEnum.DESCENDING;
     }
 
     private static void resetHandler(ActionEvent e) {
@@ -233,7 +231,7 @@ public class NumbersTest {
             isSorted = true;
         } else {
             reversingSortedCards();
-            SwingUtilities.invokeLater(relayout);
+            sortingType = sortingType == SortingTypeEnum.DESCENDING ? SortingTypeEnum.ASCENDING : SortingTypeEnum.DESCENDING;
         }
     }
 
@@ -255,17 +253,22 @@ public class NumbersTest {
     }
 
     private static void reversingSortedCards() {
-        allCards.clear();
-        if (sortingType == SortingTypeEnum.DESCENDING) {
-            for (int i = NUMBERS.size() - 1; i >= 0; i--) {
-                allCards.add(createCard(String.valueOf(NUMBERS.get(i))));
-            }
-        } else {
-            for (int num : NUMBERS) {
-                allCards.add(createCard(String.valueOf(num)));
-            }
+        for (var l : SORT_ANIMATION_TIMER.getActionListeners()) {
+            SORT_ANIMATION_TIMER.removeActionListener(l);
         }
-        sortingType = sortingType == SortingTypeEnum.DESCENDING ? SortingTypeEnum.ASCENDING : SortingTypeEnum.DESCENDING;
+        AtomicInteger firstIndex = new AtomicInteger(0);
+        AtomicInteger lastIndex = new AtomicInteger(allCards.size() - 1);
+        SORT_ANIMATION_TIMER.addActionListener(e -> {
+            int firstIndexValue = firstIndex.getAndIncrement();
+            int lastIndexValue = lastIndex.getAndDecrement();
+            if (firstIndexValue >= lastIndexValue) {
+                SORT_ANIMATION_TIMER.stop();
+                return;
+            }
+            Collections.swap(allCards, firstIndexValue, lastIndexValue);
+            relayout.run();
+        });
+        SORT_ANIMATION_TIMER.restart();
     }
 
     private static void quickSort(List<Integer> arr, int low, int high) {
